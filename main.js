@@ -1,11 +1,33 @@
 "use strict";
 exports.__esModule = true;
-function delay(ms) {
+var fs = require("fs");
+function asyncDelay(fname, ms) {
+    //let fd = fs.openSync (fname2, 'w');
     var i = 0;
+    var buff = '';
+    var buffIni = "-INICIO: " + getHora() + '\r';
     while (i < ms) {
-        console.log(i);
+        buff = buff + getHora() + "-" + i.toString() + '\r';
         i++;
     }
+    buff = buff + buffIni + "-FIN: " + getHora() + '\r';
+    fs.writeFile(fname + '-' + getMilisegs(), buff, function (err) {
+        if (err)
+            throw err;
+        pinta(getHora() + " writeFile : " + fname);
+    });
+}
+function delay(fname, ms) {
+    var i = 0;
+    var buff = '';
+    var fname2 = fname + "-" + getMilisegs();
+    var fd = fs.openSync(fname2, 'w');
+    buff = "-INICIO: " + getHora() + '\r';
+    while (i < ms) {
+        fs.writeSync(fd, getHora() + "-" + i.toString() + '\r');
+        i++;
+    }
+    fs.writeSync(fd, buff + '-FIN: ' + getHora() + '\r');
 }
 function pinta(p) {
     if (p) {
@@ -20,49 +42,51 @@ function getHora() {
     return dt.getHours() + ':' + dt.getMinutes().toString() + ':'
         + dt.getSeconds().toString() + ':' + dt.getMilliseconds();
 }
+function getMilisegs() {
+    var dt = new Date();
+    return dt.getMilliseconds().toString();
+}
 function f6() {
     return new Promise(function (resolve, reject) {
-        console.log(getHora() + " f6");
-        delay(2000);
+        console.log(getHora() + " f6 generacion promise");
+        asyncDelay('f6.txt', 2000000);
         resolve(getHora() + ' datos promesa f6');
     });
 }
 var p1 = new Promise(function (resolve, reject) {
-    console.log(getHora() + " p1");
-    setTimeout(resolve, 1000, getHora() + " datos promesa p1");
+    console.log(getHora() + " p1 generacion promise");
+    // asyncDelay ('p1.txt', 1000000);
+    // resolve(getHora() + ' datos promesa p1'); 
+    setTimeout(pinta, 3000, "p1");
+    resolve(getHora() + ' datos promesa p1 (3000 mlseg.)');
 });
 var p2 = new Promise(function (resolve, reject) {
-    console.log(getHora() + " p2");
-    setTimeout(resolve, 2000, getHora() + " datos promesa p2");
+    console.log(getHora() + " p2 generacion promise");
+    //delay ('p2.txt', 500000);
+    asyncDelay('p2.txt', 2000000);
+    resolve(getHora() + ' datos promesa p2');
 });
 var p3 = new Promise(function (resolve, reject) {
-    setTimeout(resolve, 1000, getHora() + " datos promesa p3");
-    console.log(getHora() + " p3");
+    console.log(getHora() + " p3 generacion promise");
+    // setTimeout(pinta, 3000, "p3"); 
+    // resolve (getHora() + ' datos promesa p3 (3000 mlseg.)');
+    asyncDelay('p3.txt', 1000000);
+    resolve(getHora() + ' datos promesa p3');
 });
 var p4 = new Promise(function (resolve, reject) {
-    console.log(getHora() + " p4");
-    var t = getHora();
-    resolve(t + " datos promesa p4");
+    console.log(getHora() + " p4 generacion promise");
+    setTimeout(resolve, 3000, getHora() + " datos promesa p4 (3000 mlseg.)");
+    //resolve (getHora() + ' datos promesa p4 (500 mlseg.)');
 });
-var p5 = new Promise(function (resolve, reject) {
-    //reject("reject");
-    pinta('p5');
-    resolve(getHora() + " datos promesa p5");
-    //setTimeout(resolve, 1000, "four");
-});
-Promise.all([p1, p2, p3, p4, p5, f6()]).then(function (values) {
+Promise.all([p1, p2, p3, p4, f6()]).then(function (values) {
+    console.log(getHora() + " MOSTRANDO VALUES ");
     console.log(values);
 }, function (reason) {
     console.log(reason);
 });
-Promise.all([f6(), p5, p2, p3, p4, p1]).then(function (values) {
-    console.log(values);
-})["catch"](function (reason) {
-    console.log(reason);
-});
-var fs = require("fs");
-fs.writeFile('message.txt', 'Hello Node.js', function (err) {
-    if (err)
-        throw err;
-    console.log('The file has been saved!');
-});
+console.log(getHora() + " FIN PROGRAMA");
+// Promise.all([f6(), p2, p3, p4, p1]).then(values => { 
+//   console.log(values);
+// }).catch(reason => { 
+//   console.log(reason)
+// });
